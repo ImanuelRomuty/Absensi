@@ -29,9 +29,8 @@ Stack ini **gratis** (free tier). Saya sudah siapkan kode + config; Anda perlu a
 1. Daftar di https://render.com.
 2. **New** → **Blueprint** (pakai [`render.yaml`](render.yaml)) **atau** New Web Service:
    - Root directory: `BE`
-   - Build: `corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile && pnpm build`
-   - Pre-deploy / release: `pnpm release` (migrate + seed)
-   - Start: `pnpm start`
+   - Build: `npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile --prod=false && pnpm build`
+   - Start: `pnpm start:prod` (migrate + seed + server)
    - Health check: `/api/v1/health`
 3. Environment variables:
    - `DATABASE_URL` = string dari Neon
@@ -41,6 +40,11 @@ Stack ini **gratis** (free tier). Saya sudah siapkan kode + config; Anda perlu a
    - `NODE_ENV=production`, `HOST=0.0.0.0`
 4. Deploy → catat URL, contoh: `https://masarif-be.onrender.com`
 5. Tes: buka `https://…/api/v1/health`
+
+**Troubleshooting Render**
+
+- Jangan pakai `corepack enable` (error `EROFS` di Render).
+- Pakai `--prod=false` saat install supaya `typescript` / `@types/node` ikut terpasang meski `NODE_ENV=production`.
 
 **Catatan free tier:** service bisa sleep; request pertama setelah idle lambat.
 

@@ -7,9 +7,8 @@ services:
     runtime: node
     plan: free
     rootDir: BE
-    buildCommand: corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile && pnpm build
-    preDeployCommand: pnpm release
-    startCommand: pnpm start
+    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile --prod=false && pnpm build
+    startCommand: pnpm start:prod
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV

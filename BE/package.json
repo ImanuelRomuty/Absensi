@@ -8,7 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "start:prod": "prisma migrate deploy && node dist/index.js",
+    "start:prod": "prisma migrate deploy && tsx prisma/seed.ts && node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
@@ -30,20 +30,19 @@
     "@fastify/cors": "^11.3.0",
     "@fastify/jwt": "^10.2.0",
     "@prisma/client": "^6.19.0",
+    "@types/node": "^22.15.30",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "fastify": "^5.10.0",
     "fastify-plugin": "^6.0.0",
     "prisma": "^6.19.0",
     "tsx": "^4.23.1",
+    "typescript": "^5.8.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
     "embedded-postgres": "18.4.0-beta.17",
     "pg": "^8.22.0",
-    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
 }
-

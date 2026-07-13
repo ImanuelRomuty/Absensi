@@ -101,6 +101,6 @@ Production env extras:
 Scripts:
 
 - `pnpm build` — `prisma generate` + compile
-- `pnpm release` — migrate + seed (Render pre-deploy)
+- `pnpm release` — migrate + seed
 - `pnpm start` — run compiled server
-- `pnpm start:prod` — migrate then start (alternative single command)
+- `pnpm start:prod` — migrate + seed + start (Render start command)
