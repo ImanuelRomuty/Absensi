@@ -161,6 +161,59 @@ async function main() {
     employeeId: emp2.id,
   });
 
+  const leaveTypes = [
+    { code: "ANNUAL", name: "Cuti Tahunan", paid: true, defaultDaysYear: 12 },
+    { code: "SICK", name: "Cuti Sakit", paid: true, defaultDaysYear: 12 },
+    { code: "UNPAID", name: "Cuti Tidak Dibayar", paid: false, defaultDaysYear: 5 },
+  ] as const;
+
+  const year = new Date().getUTCFullYear();
+  const seededTypes = [];
+  for (const lt of leaveTypes) {
+    const row = await prisma.leaveType.upsert({
+      where: { code: lt.code },
+      update: {
+        name: lt.name,
+        paid: lt.paid,
+        defaultDaysYear: lt.defaultDaysYear,
+        isActive: true,
+      },
+      create: {
+        code: lt.code,
+        name: lt.name,
+        paid: lt.paid,
+        defaultDaysYear: lt.defaultDaysYear,
+        isActive: true,
+      },
+    });
+    seededTypes.push(row);
+  }
+
+  for (const employeeId of [emp1.id, emp2.id, managerEmp.id, hrEmp.id]) {
+    for (const lt of seededTypes) {
+      await prisma.leaveBalance.upsert({
+        where: {
+          employeeId_leaveTypeId_year: {
+            employeeId,
+            leaveTypeId: lt.id,
+            year,
+          },
+        },
+        update: {
+          entitledDays: lt.defaultDaysYear,
+        },
+        create: {
+          employeeId,
+          leaveTypeId: lt.id,
+          year,
+          entitledDays: lt.defaultDaysYear,
+          usedDays: 0,
+          remainingDays: lt.defaultDaysYear,
+        },
+      });
+    }
+  }
+
   console.log("Seed completed.");
   console.log("Accounts (password: Password123!):");
   console.log("- superadmin@masarif.local (SUPER_ADMIN)");
@@ -168,6 +221,7 @@ async function main() {
   console.log("- manager@masarif.local (MANAGER)");
   console.log("- ani@masarif.local (EMPLOYEE)");
   console.log("- citra@masarif.local (EMPLOYEE)");
+  console.log(`Leave types seeded for year ${year}: ANNUAL, SICK, UNPAID`);
 }
 
 main()

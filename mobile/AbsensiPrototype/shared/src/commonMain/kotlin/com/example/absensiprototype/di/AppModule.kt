@@ -9,6 +9,7 @@ import com.example.absensiprototype.platform.LocationProvider
 import com.example.absensiprototype.ui.attendance.AttendanceViewModel
 import com.example.absensiprototype.ui.auth.LoginViewModel
 import com.example.absensiprototype.ui.history.HistoryViewModel
+import com.example.absensiprototype.ui.leave.LeaveViewModel
 import com.example.absensiprototype.ui.profile.ProfileViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
@@ -25,6 +26,7 @@ val appModule = module {
     factoryOf(::LoginViewModel)
     factoryOf(::AttendanceViewModel)
     factoryOf(::HistoryViewModel)
+    factoryOf(::LeaveViewModel)
     factoryOf(::ProfileViewModel)
 }
 

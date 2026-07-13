@@ -40,6 +40,34 @@ data class OfficeLocation(
     val radiusMeters: Int,
 )
 
+data class LeaveType(
+    val id: String,
+    val code: String,
+    val name: String,
+    val paid: Boolean,
+)
+
+data class LeaveBalance(
+    val id: String,
+    val leaveTypeId: String,
+    val leaveTypeName: String,
+    val year: Int,
+    val entitledDays: Int,
+    val usedDays: Int,
+    val remainingDays: Int,
+)
+
+data class LeaveRequest(
+    val id: String,
+    val leaveTypeName: String,
+    val startDate: String,
+    val endDate: String,
+    val days: Int,
+    val reason: String?,
+    val status: String,
+    val createdAt: String,
+)
+
 @Serializable
 data class PendingPunch(
     val type: PunchType,

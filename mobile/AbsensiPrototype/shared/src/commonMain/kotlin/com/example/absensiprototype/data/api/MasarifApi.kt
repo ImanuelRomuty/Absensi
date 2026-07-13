@@ -3,6 +3,9 @@ package com.example.absensiprototype.data.api
 import com.example.absensiprototype.config.AppConfig
 import com.example.absensiprototype.data.session.TokenStore
 import com.example.absensiprototype.domain.model.AttendanceRecord
+import com.example.absensiprototype.domain.model.LeaveBalance
+import com.example.absensiprototype.domain.model.LeaveRequest
+import com.example.absensiprototype.domain.model.LeaveType
 import com.example.absensiprototype.domain.model.OfficeLocation
 import com.example.absensiprototype.domain.model.PunchType
 import com.example.absensiprototype.domain.model.UserSession
@@ -66,6 +69,97 @@ class MasarifApi(
                     radiusMeters = it.radiusMeters,
                 )
             }
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun leaveTypes(): List<LeaveType> {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.get("$BASE/api/v1/leave/types") {
+                bearerAuth(token)
+            }.body<DataEnvelope<List<LeaveTypeDto>>>()
+            return response.data.map {
+                LeaveType(id = it.id, code = it.code, name = it.name, paid = it.paid)
+            }
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun myLeaveBalances(): List<LeaveBalance> {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.get("$BASE/api/v1/leave/balances/me") {
+                bearerAuth(token)
+            }.body<DataEnvelope<List<LeaveBalanceDto>>>()
+            return response.data.map {
+                LeaveBalance(
+                    id = it.id,
+                    leaveTypeId = it.leaveTypeId,
+                    leaveTypeName = it.leaveType?.name ?: it.leaveTypeId,
+                    year = it.year,
+                    entitledDays = it.entitledDays,
+                    usedDays = it.usedDays,
+                    remainingDays = it.remainingDays,
+                )
+            }
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun myLeaveRequests(): List<LeaveRequest> {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.get("$BASE/api/v1/leave/me?page=1&limit=50") {
+                bearerAuth(token)
+            }.body<LeaveListEnvelope>()
+            return response.data.map { it.toDomain() }
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun submitLeave(
+        leaveTypeId: String,
+        startDate: String,
+        endDate: String,
+        reason: String?,
+    ): LeaveRequest {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.post("$BASE/api/v1/leave") {
+                bearerAuth(token)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    LeaveSubmitRequest(
+                        leaveTypeId = leaveTypeId,
+                        startDate = startDate,
+                        endDate = endDate,
+                        reason = reason?.ifBlank { null },
+                    ),
+                )
+            }.body<DataEnvelope<LeaveRequestDto>>()
+            return response.data.toDomain()
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun cancelLeave(id: String): LeaveRequest {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.post("$BASE/api/v1/leave/$id/cancel") {
+                bearerAuth(token)
+            }.body<DataEnvelope<LeaveRequestDto>>()
+            return response.data.toDomain()
         } catch (e: ClientRequestException) {
             throw parseError(e)
         }
@@ -153,6 +247,17 @@ class MasarifApi(
         locationName = location?.name,
         isLate = isLate,
         isEarly = isEarly,
+    )
+
+    private fun LeaveRequestDto.toDomain() = LeaveRequest(
+        id = id,
+        leaveTypeName = leaveType?.name ?: leaveTypeId,
+        startDate = startDate.take(10),
+        endDate = endDate.take(10),
+        days = days,
+        reason = reason,
+        status = status,
+        createdAt = createdAt,
     )
 
     companion object {

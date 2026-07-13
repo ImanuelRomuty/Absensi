@@ -12,6 +12,7 @@ import {
   AttendancePage,
 } from "./pages/AttendanceApprovalsPages";
 import { LocationsPage } from "./pages/LocationsPage";
+import { LeavePage } from "./pages/LeavePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/attendance" element={<AttendancePage />} />
+              <Route path="/leave" element={<LeavePage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/locations" element={<LocationsPage />} />

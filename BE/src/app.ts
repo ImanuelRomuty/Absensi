@@ -12,6 +12,7 @@ import { employeeRoutes } from "./modules/employees/routes.js";
 import { locationRoutes } from "./modules/locations/routes.js";
 import { attendanceRoutes } from "./modules/attendance/routes.js";
 import { approvalRoutes } from "./modules/approvals/routes.js";
+import { leaveRoutes } from "./modules/leave/routes.js";
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -50,6 +51,7 @@ export async function buildApp(env: Env) {
       await api.register(locationRoutes);
       await api.register(attendanceRoutes);
       await api.register(approvalRoutes);
+      await api.register(leaveRoutes);
     },
     { prefix: "/api/v1" },
   );

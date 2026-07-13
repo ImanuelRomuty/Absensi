@@ -104,7 +104,7 @@ export type Attendance = {
 
 export type Approval = {
   id: string;
-  type: "ATTENDANCE_CORRECTION";
+  type: "ATTENDANCE_CORRECTION" | "LEAVE";
   status: "PENDING" | "APPROVED" | "REJECTED";
   requesterId: string;
   reviewerId: string | null;
@@ -122,4 +122,33 @@ export type Approval = {
     employee: { id: string; name: string; employeeCode: string } | null;
   };
   reviewer?: { id: string; email: string } | null;
+};
+
+export type LeaveType = {
+  id: string;
+  code: string;
+  name: string;
+  paid: boolean;
+  defaultDaysYear: number;
+  isActive: boolean;
+};
+
+export type LeaveRequest = {
+  id: string;
+  employeeId: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  approvalId: string | null;
+  createdAt: string;
+  leaveType?: { id: string; code: string; name: string; paid: boolean };
+  employee?: {
+    id: string;
+    name: string;
+    employeeCode: string;
+    department: string | null;
+  };
 };

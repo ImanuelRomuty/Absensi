@@ -20,6 +20,7 @@ import com.example.absensiprototype.data.api.MasarifApi
 import com.example.absensiprototype.ui.attendance.AttendanceScreen
 import com.example.absensiprototype.ui.auth.LoginScreen
 import com.example.absensiprototype.ui.history.HistoryScreen
+import com.example.absensiprototype.ui.leave.LeaveScreen
 import com.example.absensiprototype.ui.profile.ProfileScreen
 import org.koin.compose.koinInject
 
@@ -27,6 +28,7 @@ private object Routes {
     const val Login = "login"
     const val Main = "main"
     const val Attendance = "attendance"
+    const val Leave = "leave"
     const val History = "history"
     const val Profile = "profile"
 }
@@ -74,6 +76,12 @@ private fun MainShell(onLoggedOut: () -> Unit) {
                     label = { Text("Absensi") },
                 )
                 NavigationBarItem(
+                    selected = tab == Routes.Leave,
+                    onClick = { tab = Routes.Leave },
+                    icon = { Text("C") },
+                    label = { Text("Cuti") },
+                )
+                NavigationBarItem(
                     selected = tab == Routes.History,
                     onClick = { tab = Routes.History },
                     icon = { Text("R") },
@@ -91,6 +99,7 @@ private fun MainShell(onLoggedOut: () -> Unit) {
         Box(modifier = Modifier.padding(padding)) {
             when (tab) {
                 Routes.Attendance -> AttendanceScreen()
+                Routes.Leave -> LeaveScreen()
                 Routes.History -> HistoryScreen()
                 Routes.Profile -> ProfileScreen(onLoggedOut = onLoggedOut)
             }

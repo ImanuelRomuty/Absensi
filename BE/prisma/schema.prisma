@@ -44,6 +44,8 @@ model Employee {
   user         User?
   locations    EmployeeLocation[]
   attendances  Attendance[]
+  leaveBalances LeaveBalance[]
+  leaveRequests LeaveRequest[]
 }
 
 model RefreshToken {
@@ -124,6 +126,7 @@ model Attendance {
 
 enum ApprovalType {
   ATTENDANCE_CORRECTION
+  LEAVE
 }
 
 enum ApprovalStatus {
@@ -151,4 +154,59 @@ model Approval {
   @@index([status, createdAt])
   @@index([requesterId])
   @@index([type, status])
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model LeaveType {
+  id               String          @id @default(cuid())
+  code             String          @unique
+  name             String
+  paid             Boolean         @default(true)
+  defaultDaysYear  Int             @default(12)
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  balances         LeaveBalance[]
+  requests         LeaveRequest[]
+}
+
+model LeaveBalance {
+  id           String    @id @default(cuid())
+  employeeId   String
+  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId  String
+  leaveType    LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  year         Int
+  entitledDays Int
+  usedDays     Int       @default(0)
+  remainingDays Int
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([employeeId, year])
+}
+
+model LeaveRequest {
+  id          String             @id @default(cuid())
+  employeeId  String
+  employee    Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  startDate   DateTime           @db.Date
+  endDate     DateTime           @db.Date
+  days        Int
+  reason      String?
+  status      LeaveRequestStatus @default(PENDING)
+  approvalId  String?            @unique
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([employeeId, status])
+  @@index([status, createdAt])
 }

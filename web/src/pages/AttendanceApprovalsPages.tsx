@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { approvalsApi, attendanceApi } from "../lib/services";
 import { ApiClientError } from "../lib/api";
+import type { Approval } from "../types/api";
 
 function startOfDayIso(dateStr: string) {
   return new Date(`${dateStr}T00:00:00.000+07:00`).toISOString();
@@ -18,6 +19,21 @@ function todayJakarta() {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+}
+
+function approvalSummary(row: Approval): string {
+  if (row.type === "LEAVE") {
+    const p = row.payload as {
+      leaveTypeCode?: string;
+      startDate?: string;
+      endDate?: string;
+      days?: number;
+    } | null;
+    if (p?.startDate && p?.endDate) {
+      return `${p.leaveTypeCode ?? "LEAVE"} ${p.startDate} → ${p.endDate} (${p.days ?? "?"} hari)`;
+    }
+  }
+  return row.note ?? "—";
 }
 
 export function AttendancePage() {
@@ -93,12 +109,18 @@ export function AttendancePage() {
 export function ApprovalsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"PENDING" | "ALL">("PENDING");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "LEAVE" | "ATTENDANCE_CORRECTION">(
+    "ALL",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const query = useQuery({
-    queryKey: ["approvals", filter],
+    queryKey: ["approvals", filter, typeFilter],
     queryFn: () =>
-      approvalsApi.list(filter === "PENDING" ? "PENDING" : undefined),
+      approvalsApi.list({
+        status: filter === "PENDING" ? "PENDING" : undefined,
+        type: typeFilter === "ALL" ? undefined : typeFilter,
+      }),
   });
 
   const decide = useMutation({
@@ -110,6 +132,7 @@ export function ApprovalsPage() {
       setError(null);
       await queryClient.invalidateQueries({ queryKey: ["approvals"] });
       await queryClient.invalidateQueries({ queryKey: ["attendance"] });
+      await queryClient.invalidateQueries({ queryKey: ["leave"] });
     },
     onError: (err) => {
       setError(err instanceof ApiClientError ? err.message : "Gagal memproses");
@@ -126,7 +149,7 @@ export function ApprovalsPage() {
   return (
     <section>
       <h1>Approval</h1>
-      <p className="muted">Antrian koreksi absensi.</p>
+      <p className="muted">Antrian koreksi absensi dan cuti.</p>
       <div className="inline-filter">
         <button
           type="button"
@@ -142,6 +165,27 @@ export function ApprovalsPage() {
         >
           Semua
         </button>
+        <button
+          type="button"
+          className={typeFilter === "ALL" ? undefined : "ghost"}
+          onClick={() => setTypeFilter("ALL")}
+        >
+          Semua tipe
+        </button>
+        <button
+          type="button"
+          className={typeFilter === "LEAVE" ? undefined : "ghost"}
+          onClick={() => setTypeFilter("LEAVE")}
+        >
+          Cuti
+        </button>
+        <button
+          type="button"
+          className={typeFilter === "ATTENDANCE_CORRECTION" ? undefined : "ghost"}
+          onClick={() => setTypeFilter("ATTENDANCE_CORRECTION")}
+        >
+          Koreksi absensi
+        </button>
       </div>
       {error ? <p className="error">{error}</p> : null}
       <div className="table-wrap">
@@ -149,8 +193,9 @@ export function ApprovalsPage() {
           <thead>
             <tr>
               <th>Dibuat</th>
+              <th>Tipe</th>
               <th>Pemohon</th>
-              <th>Catatan</th>
+              <th>Detail</th>
               <th>Status</th>
               <th>Aksi</th>
             </tr>
@@ -158,18 +203,19 @@ export function ApprovalsPage() {
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5}>Tidak ada approval.</td>
+                <td colSpan={6}>Tidak ada approval.</td>
               </tr>
             ) : (
               rows.map((row) => (
                 <tr key={row.id}>
                   <td>{new Date(row.createdAt).toLocaleString("id-ID")}</td>
+                  <td>{row.type === "LEAVE" ? "Cuti" : "Koreksi absensi"}</td>
                   <td>
                     {row.requester?.employee?.name ??
                       row.requester?.email ??
                       row.requesterId}
                   </td>
-                  <td>{row.note ?? "—"}</td>
+                  <td>{approvalSummary(row)}</td>
                   <td>{row.status}</td>
                   <td>
                     {row.status === "PENDING" ? (

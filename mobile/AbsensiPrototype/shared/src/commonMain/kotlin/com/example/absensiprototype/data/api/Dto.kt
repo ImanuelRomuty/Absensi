@@ -104,3 +104,49 @@ data class MeLocationDto(
     val longitude: Double,
     val radiusMeters: Int,
 )
+
+@Serializable
+data class LeaveTypeDto(
+    val id: String,
+    val code: String,
+    val name: String,
+    val paid: Boolean = true,
+    val defaultDaysYear: Int = 12,
+)
+
+@Serializable
+data class LeaveBalanceDto(
+    val id: String,
+    val leaveTypeId: String,
+    val year: Int,
+    val entitledDays: Int,
+    val usedDays: Int,
+    val remainingDays: Int,
+    val leaveType: LeaveTypeDto? = null,
+)
+
+@Serializable
+data class LeaveRequestDto(
+    val id: String,
+    val leaveTypeId: String,
+    val startDate: String,
+    val endDate: String,
+    val days: Int,
+    val reason: String? = null,
+    val status: String,
+    val createdAt: String,
+    val leaveType: LeaveTypeDto? = null,
+)
+
+@Serializable
+data class LeaveSubmitRequest(
+    val leaveTypeId: String,
+    val startDate: String,
+    val endDate: String,
+    val reason: String? = null,
+)
+
+@Serializable
+data class LeaveListEnvelope(
+    val data: List<LeaveRequestDto>,
+)

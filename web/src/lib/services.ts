@@ -3,6 +3,7 @@ import type {
   Approval,
   Attendance,
   Employee,
+  LeaveRequest,
   Location,
   LoginResponse,
   MeResponse,
@@ -76,9 +77,13 @@ export const attendanceApi = {
 };
 
 export const approvalsApi = {
-  list(status?: "PENDING" | "APPROVED" | "REJECTED") {
+  list(params?: {
+    status?: "PENDING" | "APPROVED" | "REJECTED";
+    type?: "ATTENDANCE_CORRECTION" | "LEAVE";
+  }) {
     const q = new URLSearchParams({ page: "1", limit: "50" });
-    if (status) q.set("status", status);
+    if (params?.status) q.set("status", params.status);
+    if (params?.type) q.set("type", params.type);
     return apiList<Approval>(`/approvals?${q.toString()}`);
   },
   decide(id: string, decision: "APPROVED" | "REJECTED", decisionNote?: string) {
@@ -86,5 +91,19 @@ export const approvalsApi = {
       method: "POST",
       body: { decision, decisionNote },
     });
+  },
+};
+
+export const leaveApi = {
+  list(params?: {
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+    page?: number;
+    limit?: number;
+  }) {
+    const q = new URLSearchParams();
+    q.set("page", String(params?.page ?? 1));
+    q.set("limit", String(params?.limit ?? 50));
+    if (params?.status) q.set("status", params.status);
+    return apiList<LeaveRequest>(`/leave?${q.toString()}`);
   },
 };

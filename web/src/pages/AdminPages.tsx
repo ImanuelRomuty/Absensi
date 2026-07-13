@@ -27,6 +27,7 @@ export function AppLayout() {
             Ringkasan
           </NavLink>
           <NavLink to="/attendance">Absensi</NavLink>
+          <NavLink to="/leave">Cuti</NavLink>
           <NavLink to="/approvals">Approval</NavLink>
           <NavLink to="/employees">Karyawan</NavLink>
           <NavLink to="/locations">Lokasi</NavLink>

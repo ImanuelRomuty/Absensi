@@ -1,6 +1,13 @@
 import { z } from "zod";
 import type { FastifyPluginAsync } from "fastify";
-import { ApprovalStatus, AttendanceType, Prisma, Role } from "@prisma/client";
+import {
+  ApprovalStatus,
+  ApprovalType,
+  AttendanceType,
+  LeaveRequestStatus,
+  Prisma,
+  Role,
+} from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../lib/errors.js";
 import { sendData } from "../../lib/response.js";
@@ -10,6 +17,7 @@ const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
   status: z.nativeEnum(ApprovalStatus).optional(),
+  type: z.nativeEnum(ApprovalType).optional(),
 });
 
 const decideBodySchema = z.object({
@@ -26,6 +34,13 @@ type CorrectionPayload = {
   longitude: number | null;
 };
 
+type LeavePayload = {
+  leaveRequestId: string;
+  employeeId: string;
+  leaveTypeId: string;
+  days: number;
+};
+
 export const approvalRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     "/approvals",
@@ -38,6 +53,7 @@ export const approvalRoutes: FastifyPluginAsync = async (app) => {
       const query = listQuerySchema.parse(request.query);
       const where = {
         ...(query.status ? { status: query.status } : {}),
+        ...(query.type ? { type: query.type } : {}),
         ...(request.user.role === Role.MANAGER
           ? {
               requester: {
@@ -135,7 +151,7 @@ export const approvalRoutes: FastifyPluginAsync = async (app) => {
 
         if (
           body.decision === "APPROVED" &&
-          approval.type === "ATTENDANCE_CORRECTION"
+          approval.type === ApprovalType.ATTENDANCE_CORRECTION
         ) {
           const payload = approval.payload as CorrectionPayload;
           const recordedAt = new Date(payload.proposedRecordedAt);
@@ -168,6 +184,56 @@ export const approvalRoutes: FastifyPluginAsync = async (app) => {
                 isEarly: flags.isEarly,
                 recordedAt,
               },
+            });
+          }
+        }
+
+        if (approval.type === ApprovalType.LEAVE) {
+          const payload = approval.payload as LeavePayload;
+          const leave = await tx.leaveRequest.findUnique({
+            where: { id: payload.leaveRequestId },
+          });
+          if (!leave || leave.status !== LeaveRequestStatus.PENDING) {
+            throw new AppError(
+              409,
+              "LEAVE_NOT_PENDING",
+              "Linked leave request is not pending",
+            );
+          }
+
+          if (body.decision === "APPROVED") {
+            const year = leave.startDate.getUTCFullYear();
+            const balance = await tx.leaveBalance.findUnique({
+              where: {
+                employeeId_leaveTypeId_year: {
+                  employeeId: leave.employeeId,
+                  leaveTypeId: leave.leaveTypeId,
+                  year,
+                },
+              },
+            });
+            if (!balance || balance.remainingDays < leave.days) {
+              throw new AppError(
+                400,
+                "INSUFFICIENT_BALANCE",
+                "Insufficient leave balance at approval time",
+              );
+            }
+            await tx.leaveBalance.update({
+              where: { id: balance.id },
+              data: {
+                usedDays: balance.usedDays + leave.days,
+                remainingDays: balance.remainingDays - leave.days,
+              },
+            });
+            await tx.leaveRequest.update({
+              where: { id: leave.id },
+              data: { status: LeaveRequestStatus.APPROVED },
+            });
+          } else {
+            await tx.leaveRequest.update({
+              where: { id: leave.id },
+              data: { status: LeaveRequestStatus.REJECTED },
             });
           }
         }
