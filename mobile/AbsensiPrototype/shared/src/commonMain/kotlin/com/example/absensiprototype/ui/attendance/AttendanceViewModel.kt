@@ -13,9 +13,11 @@ import kotlinx.coroutines.launch
 
 data class AttendanceUiState(
     val isLoading: Boolean = false,
+    val isRefreshingGps: Boolean = false,
     val message: String? = null,
     val error: String? = null,
     val pendingCount: Int = 0,
+    val debugLines: List<String> = emptyList(),
 )
 
 class AttendanceViewModel(
@@ -26,10 +28,34 @@ class AttendanceViewModel(
 
     init {
         flushQueue()
+        refreshGps()
     }
 
     fun clockIn() = punch(PunchType.CLOCK_IN)
     fun clockOut() = punch(PunchType.CLOCK_OUT)
+
+    fun refreshGps() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshingGps = true, error = null) }
+            try {
+                val debug = repository.loadGeofenceDebug()
+                _uiState.update {
+                    it.copy(
+                        isRefreshingGps = false,
+                        debugLines = debug.summaryLines(),
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isRefreshingGps = false,
+                        debugLines = emptyList(),
+                        error = e.message ?: "Gagal membaca GPS / lokasi kantor",
+                    )
+                }
+            }
+        }
+    }
 
     fun flushQueue() {
         viewModelScope.launch {
@@ -51,24 +77,28 @@ class AttendanceViewModel(
             try {
                 val record = repository.punch(type)
                 val label = if (type == PunchType.CLOCK_IN) "Clock-in" else "Clock-out"
+                val debug = runCatching { repository.loadGeofenceDebug() }.getOrNull()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         message = "$label berhasil (${record.locationName ?: "lokasi OK"})",
                         pendingCount = repository.pendingCount(),
+                        debugLines = debug?.summaryLines() ?: it.debugLines,
                     )
                 }
             } catch (e: ApiException) {
                 val friendly = when (e.code) {
-                    "OUTSIDE_GEOFENCE" -> "Di luar area kantor (geofence)."
+                    "OUTSIDE_GEOFENCE" -> e.message
                     "OFFLINE_QUEUED" -> e.message
                     else -> e.message
                 }
+                val debug = runCatching { repository.loadGeofenceDebug() }.getOrNull()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         error = friendly,
                         pendingCount = repository.pendingCount(),
+                        debugLines = debug?.summaryLines() ?: it.debugLines,
                     )
                 }
             } catch (e: Exception) {

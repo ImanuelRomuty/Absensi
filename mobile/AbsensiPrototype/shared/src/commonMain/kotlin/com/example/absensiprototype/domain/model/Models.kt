@@ -32,6 +32,14 @@ data class AttendanceRecord(
     val isEarly: Boolean,
 )
 
+data class OfficeLocation(
+    val id: String,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+    val radiusMeters: Int,
+)
+
 @Serializable
 data class PendingPunch(
     val type: PunchType,

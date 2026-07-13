@@ -77,3 +77,30 @@ data class AttendanceLocationDto(
 data class AttendanceListEnvelope(
     val data: List<AttendanceDto>,
 )
+
+@Serializable
+data class MeData(
+    val id: String,
+    val email: String,
+    val role: String,
+    val employeeId: String? = null,
+    val employee: MeEmployee? = null,
+)
+
+@Serializable
+data class MeEmployee(
+    val id: String,
+    val name: String,
+    val employeeCode: String? = null,
+    val department: String? = null,
+    val locations: List<MeLocationDto> = emptyList(),
+)
+
+@Serializable
+data class MeLocationDto(
+    val id: String,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+    val radiusMeters: Int,
+)

@@ -3,6 +3,7 @@ package com.example.absensiprototype.data.api
 import com.example.absensiprototype.config.AppConfig
 import com.example.absensiprototype.data.session.TokenStore
 import com.example.absensiprototype.domain.model.AttendanceRecord
+import com.example.absensiprototype.domain.model.OfficeLocation
 import com.example.absensiprototype.domain.model.PunchType
 import com.example.absensiprototype.domain.model.UserSession
 import io.ktor.client.HttpClient
@@ -44,6 +45,27 @@ class MasarifApi(
             )
             persistSession(session)
             return session
+        } catch (e: ClientRequestException) {
+            throw parseError(e)
+        }
+    }
+
+    suspend fun myLocations(): List<OfficeLocation> {
+        val token = tokenStore.accessToken
+            ?: throw ApiException("UNAUTHORIZED", "Silakan login ulang")
+        try {
+            val response = httpClient.get("$BASE/api/v1/me") {
+                bearerAuth(token)
+            }.body<DataEnvelope<MeData>>()
+            return response.data.employee?.locations.orEmpty().map {
+                OfficeLocation(
+                    id = it.id,
+                    name = it.name,
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    radiusMeters = it.radiusMeters,
+                )
+            }
         } catch (e: ClientRequestException) {
             throw parseError(e)
         }
