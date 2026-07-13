@@ -322,6 +322,123 @@ input[type="range"] {
   accent-color: #1f6f5b;
 }
 
+.api-log-panel {
+  margin-top: 24px;
+  padding: 18px;
+  background: #0f3d3e;
+  color: #e8f4ef;
+  border-radius: 14px;
+}
+
+.api-log-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.api-log-panel__header h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.api-log-panel .muted {
+  color: #a8c4bb;
+}
+
+.api-log-panel .ghost {
+  color: #e8f4ef;
+  border-color: #3d6f6a;
+}
+
+.api-log-list {
+  display: grid;
+  gap: 12px;
+  max-height: 480px;
+  overflow: auto;
+}
+
+.api-log-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.api-log-card.fail {
+  border-color: rgba(255, 120, 120, 0.45);
+}
+
+.api-log-card header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.api-log-method {
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.api-log-status {
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.api-log-status.ok {
+  background: rgba(70, 180, 120, 0.25);
+  color: #9dffc4;
+}
+
+.api-log-status.fail {
+  background: rgba(220, 80, 80, 0.3);
+  color: #ffb4b4;
+}
+
+.api-log-url {
+  margin: 0 0 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.api-log-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.api-log-grid h4 {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a8c4bb;
+  font-weight: 600;
+}
+
+.api-log-grid pre {
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow: auto;
+  max-height: 220px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.api-log-time {
+  margin-left: auto;
+}
+
 @media (max-width: 900px) {
   .location-editor {
     grid-template-columns: 1fr;
@@ -329,6 +446,10 @@ input[type="range"] {
 
   .location-map__canvas {
     height: 300px;
+  }
+
+  .api-log-grid {
+    grid-template-columns: 1fr;
   }
 }
 

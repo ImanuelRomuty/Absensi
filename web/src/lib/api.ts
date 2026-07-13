@@ -1,4 +1,5 @@
 import type { ApiErrorBody, PaginationMeta } from "../types/api";
+import { pushApiLog } from "./apiDebugLog";
 
 const TOKEN_KEY = "masarif_access_token";
 const REFRESH_KEY = "masarif_refresh_token";
@@ -33,13 +34,21 @@ export class ApiClientError extends Error {
   readonly status: number;
   readonly code: string;
   readonly details?: unknown;
+  readonly responseBody?: unknown;
 
-  constructor(status: number, code: string, message: string, details?: unknown) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: unknown,
+    responseBody?: unknown,
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.status = status;
     this.code = code;
     this.details = details;
+    this.responseBody = responseBody;
   }
 }
 
@@ -49,24 +58,38 @@ type RequestOptions = {
   auth?: boolean;
 };
 
-async function parseError(res: Response): Promise<ApiClientError> {
+async function readJsonSafe(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) return null;
   try {
-    const json = (await res.json()) as ApiErrorBody;
-    return new ApiClientError(
-      res.status,
-      json.error?.code ?? "UNKNOWN",
-      json.error?.message ?? res.statusText,
-      json.error?.details,
-    );
+    return JSON.parse(text) as unknown;
   } catch {
-    return new ApiClientError(res.status, "UNKNOWN", res.statusText);
+    return text;
   }
+}
+
+function parseErrorFromBody(status: number, body: unknown): ApiClientError {
+  if (body && typeof body === "object" && "error" in body) {
+    const json = body as ApiErrorBody;
+    return new ApiClientError(
+      status,
+      json.error?.code ?? "UNKNOWN",
+      json.error?.message ?? "Request failed",
+      json.error?.details,
+      body,
+    );
+  }
+  return new ApiClientError(status, "UNKNOWN", `HTTP ${status}`, undefined, body);
 }
 
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
+  const method = options.method ?? (options.body ? "POST" : "GET");
+  const url = `${getApiBaseUrl()}/api/v1${path}`;
+  const started = performance.now();
+
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
@@ -80,23 +103,57 @@ export async function apiRequest<T>(
     }
   }
 
-  const res = await fetch(`${getApiBaseUrl()}/api/v1${path}`, {
-    method: options.method ?? (options.body ? "POST" : "GET"),
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+    const responseBody = await readJsonSafe(res);
+    const durationMs = Math.round(performance.now() - started);
 
-  if (!res.ok) {
-    throw await parseError(res);
+    pushApiLog({
+      method,
+      url,
+      requestBody: options.body ?? null,
+      status: res.status,
+      ok: res.ok,
+      responseBody,
+      durationMs,
+      errorMessage: res.ok ? undefined : `HTTP ${res.status}`,
+    });
+
+    if (!res.ok) {
+      throw parseErrorFromBody(res.status, responseBody);
+    }
+
+    const json = responseBody as { data: T };
+    return json.data;
+  } catch (err) {
+    if (err instanceof ApiClientError) throw err;
+    const durationMs = Math.round(performance.now() - started);
+    const message = err instanceof Error ? err.message : "Network error";
+    pushApiLog({
+      method,
+      url,
+      requestBody: options.body ?? null,
+      status: null,
+      ok: false,
+      responseBody: null,
+      errorMessage: message,
+      durationMs,
+    });
+    throw err;
   }
-
-  const json = (await res.json()) as { data: T };
-  return json.data;
 }
 
 export async function apiList<T>(
   path: string,
 ): Promise<{ data: T[]; meta?: PaginationMeta }> {
+  const method = "GET";
+  const url = `${getApiBaseUrl()}/api/v1${path}`;
+  const started = performance.now();
+
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
@@ -105,9 +162,41 @@ export async function apiList<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${getApiBaseUrl()}/api/v1${path}`, { headers });
-  if (!res.ok) {
-    throw await parseError(res);
+  try {
+    const res = await fetch(url, { headers });
+    const responseBody = await readJsonSafe(res);
+    const durationMs = Math.round(performance.now() - started);
+
+    pushApiLog({
+      method,
+      url,
+      requestBody: null,
+      status: res.status,
+      ok: res.ok,
+      responseBody,
+      durationMs,
+      errorMessage: res.ok ? undefined : `HTTP ${res.status}`,
+    });
+
+    if (!res.ok) {
+      throw parseErrorFromBody(res.status, responseBody);
+    }
+
+    return responseBody as { data: T[]; meta?: PaginationMeta };
+  } catch (err) {
+    if (err instanceof ApiClientError) throw err;
+    const durationMs = Math.round(performance.now() - started);
+    const message = err instanceof Error ? err.message : "Network error";
+    pushApiLog({
+      method,
+      url,
+      requestBody: null,
+      status: null,
+      ok: false,
+      responseBody: null,
+      errorMessage: message,
+      durationMs,
+    });
+    throw err;
   }
-  return res.json() as Promise<{ data: T[]; meta?: PaginationMeta }>;
 }

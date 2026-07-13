@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { ApiLogPanel } from "../components/ApiLogPanel";
 import { LocationMap } from "../components/LocationMap";
 import { ApiClientError } from "../lib/api";
 import { locationsApi } from "../lib/services";
@@ -140,9 +141,23 @@ export function LocationsPage() {
     saveMutation.mutate();
   }
 
-  if (query.isLoading) return <p>Memuat lokasi...</p>;
+  if (query.isLoading) {
+    return (
+      <section>
+        <h1>Lokasi / Geofence</h1>
+        <p>Memuat lokasi...</p>
+        <ApiLogPanel title="API log (Lokasi)" />
+      </section>
+    );
+  }
   if (query.isError) {
-    return <p className="error">{(query.error as Error).message}</p>;
+    return (
+      <section>
+        <h1>Lokasi / Geofence</h1>
+        <p className="error">{(query.error as Error).message}</p>
+        <ApiLogPanel title="API log (Lokasi)" />
+      </section>
+    );
   }
 
   return (
@@ -319,6 +334,8 @@ export function LocationsPage() {
           </tbody>
         </table>
       </div>
+
+      <ApiLogPanel title="API log (Lokasi)" />
     </section>
   );
 }
