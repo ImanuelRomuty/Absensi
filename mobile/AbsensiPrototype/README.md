@@ -1,24 +1,29 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# AbsensiPrototype (Mobile)
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+KMP Compose app for employee attendance against the live API.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## Run (Android)
 
-### Running the apps
+1. Open `mobile/AbsensiPrototype` in Android Studio.
+2. Run `androidApp` on a device/emulator with GPS.
+3. Allow location permission.
+4. Login: `ani@masarif.local` / `Password123!`
+5. Use **Clock In / Clock Out** (must be inside assigned office geofence from seed location).
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+API base URL: `https://absensi-f955.onrender.com` (see `shared/.../config/AppConfig.kt`).
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## Features
 
----
+- Login + session (multiplatform settings)
+- Bottom nav: Absensi, Riwayat, Profil
+- GPS punch with geofence errors from API
+- Offline punch queue (retry when network returns)
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Build APK
+
+```bash
+cd mobile/AbsensiPrototype
+./gradlew :androidApp:assembleDebug
+```
+
+APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`

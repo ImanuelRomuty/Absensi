@@ -1,48 +1,98 @@
 package com.example.absensiprototype
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.absensiprototype.data.api.MasarifApi
+import com.example.absensiprototype.ui.attendance.AttendanceScreen
+import com.example.absensiprototype.ui.auth.LoginScreen
+import com.example.absensiprototype.ui.history.HistoryScreen
+import com.example.absensiprototype.ui.profile.ProfileScreen
+import org.koin.compose.koinInject
 
-import absensiprototype.shared.generated.resources.Res
-import absensiprototype.shared.generated.resources.compose_multiplatform
+private object Routes {
+    const val Login = "login"
+    const val Main = "main"
+    const val Attendance = "attendance"
+    const val History = "history"
+    const val Profile = "profile"
+}
 
 @Composable
-@Preview
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+        val api = koinInject<MasarifApi>()
+        val rootNav = rememberNavController()
+        val start = if (api.currentSession() != null) Routes.Main else Routes.Login
+
+        NavHost(navController = rootNav, startDestination = start) {
+            composable(Routes.Login) {
+                LoginScreen(
+                    onLoggedIn = {
+                        rootNav.navigate(Routes.Main) {
+                            popUpTo(Routes.Login) { inclusive = true }
+                        }
+                    },
+                )
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+            composable(Routes.Main) {
+                MainShell(
+                    onLoggedOut = {
+                        rootNav.navigate(Routes.Login) {
+                            popUpTo(Routes.Main) { inclusive = true }
+                        }
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainShell(onLoggedOut: () -> Unit) {
+    var tab by remember { mutableStateOf(Routes.Attendance) }
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = tab == Routes.Attendance,
+                    onClick = { tab = Routes.Attendance },
+                    icon = { Text("A") },
+                    label = { Text("Absensi") },
+                )
+                NavigationBarItem(
+                    selected = tab == Routes.History,
+                    onClick = { tab = Routes.History },
+                    icon = { Text("R") },
+                    label = { Text("Riwayat") },
+                )
+                NavigationBarItem(
+                    selected = tab == Routes.Profile,
+                    onClick = { tab = Routes.Profile },
+                    icon = { Text("P") },
+                    label = { Text("Profil") },
+                )
+            }
+        },
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            when (tab) {
+                Routes.Attendance -> AttendanceScreen()
+                Routes.History -> HistoryScreen()
+                Routes.Profile -> ProfileScreen(onLoggedOut = onLoggedOut)
             }
         }
     }
