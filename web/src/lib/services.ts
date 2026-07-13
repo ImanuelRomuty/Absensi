@@ -1,5 +1,12 @@
 import { apiList, apiRequest, clearTokens, setTokens } from "./api";
-import type { Employee, Location, LoginResponse, MeResponse } from "../types/api";
+import type {
+  Approval,
+  Attendance,
+  Employee,
+  Location,
+  LoginResponse,
+  MeResponse,
+} from "../types/api";
 
 export const authApi = {
   login(email: string, password: string) {
@@ -33,5 +40,30 @@ export const employeesApi = {
 export const locationsApi = {
   list(page = 1, limit = 50) {
     return apiList<Location>(`/locations?page=${page}&limit=${limit}`);
+  },
+};
+
+export const attendanceApi = {
+  list(params?: { from?: string; to?: string; page?: number; limit?: number }) {
+    const q = new URLSearchParams();
+    q.set("page", String(params?.page ?? 1));
+    q.set("limit", String(params?.limit ?? 50));
+    if (params?.from) q.set("from", params.from);
+    if (params?.to) q.set("to", params.to);
+    return apiList<Attendance>(`/attendance?${q.toString()}`);
+  },
+};
+
+export const approvalsApi = {
+  list(status?: "PENDING" | "APPROVED" | "REJECTED") {
+    const q = new URLSearchParams({ page: "1", limit: "50" });
+    if (status) q.set("status", status);
+    return apiList<Approval>(`/approvals?${q.toString()}`);
+  },
+  decide(id: string, decision: "APPROVED" | "REJECTED", decisionNote?: string) {
+    return apiRequest<Approval>(`/approvals/${id}/decide`, {
+      method: "POST",
+      body: { decision, decisionNote },
+    });
   },
 };

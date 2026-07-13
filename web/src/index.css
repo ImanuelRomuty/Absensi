@@ -235,6 +235,20 @@ th {
   color: #5b6b75;
 }
 
+.inline-filter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 800px) {
   .app-shell {
     grid-template-columns: 1fr;

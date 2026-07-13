@@ -80,3 +80,46 @@ export type Location = {
   radiusMeters: number;
   isActive: boolean;
 };
+
+export type Attendance = {
+  id: string;
+  employeeId: string;
+  type: "CLOCK_IN" | "CLOCK_OUT";
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number | null;
+  locationId: string | null;
+  idempotencyKey: string;
+  isLate: boolean;
+  isEarly: boolean;
+  recordedAt: string;
+  employee?: {
+    id: string;
+    name: string;
+    employeeCode: string;
+    department: string | null;
+  };
+  location?: { id: string; name: string } | null;
+};
+
+export type Approval = {
+  id: string;
+  type: "ATTENDANCE_CORRECTION";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  requesterId: string;
+  reviewerId: string | null;
+  note: string | null;
+  decisionNote: string | null;
+  payload: unknown;
+  entityType: string | null;
+  entityId: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+  requester?: {
+    id: string;
+    email: string;
+    role: Role;
+    employee: { id: string; name: string; employeeCode: string } | null;
+  };
+  reviewer?: { id: string; email: string } | null;
+};

@@ -10,6 +10,8 @@ import { healthRoutes } from "./modules/health/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { employeeRoutes } from "./modules/employees/routes.js";
 import { locationRoutes } from "./modules/locations/routes.js";
+import { attendanceRoutes } from "./modules/attendance/routes.js";
+import { approvalRoutes } from "./modules/approvals/routes.js";
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -46,6 +48,8 @@ export async function buildApp(env: Env) {
       await api.register(authRoutes(env));
       await api.register(employeeRoutes);
       await api.register(locationRoutes);
+      await api.register(attendanceRoutes);
+      await api.register(approvalRoutes);
     },
     { prefix: "/api/v1" },
   );

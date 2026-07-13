@@ -83,6 +83,11 @@ Password for all: `Password123!`
 - `GET|PATCH /api/v1/employees/:id`
 - `GET|POST /api/v1/locations`
 - `GET|PATCH /api/v1/locations/:id`
+- `POST /api/v1/attendance/clock-in` / `clock-out`
+- `GET /api/v1/attendance` / `attendance/me`
+- `POST /api/v1/attendance/corrections`
+- `GET /api/v1/approvals`
+- `POST /api/v1/approvals/:id/decide`
 
 Response envelope: `{ "data": ... }` or `{ "error": { "code", "message", "details?" } }`.
 
