@@ -1,0 +1,32 @@
+# Render Blueprint — set DATABASE_URL (Neon) and WEB_ORIGIN (Vercel URL) in the dashboard.
+# Repo root file; service uses rootDir BE.
+
+services:
+  - type: web
+    name: masarif-be
+    runtime: node
+    plan: free
+    rootDir: BE
+    buildCommand: corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm release
+    startCommand: pnpm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        sync: false
