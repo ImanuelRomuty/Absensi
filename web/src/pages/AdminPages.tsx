@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { canAccessAdmin, useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl } from "../lib/api";
-import { employeesApi, locationsApi } from "../lib/services";
+import { employeesApi } from "../lib/services";
 
 export function AppLayout() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -86,7 +86,7 @@ export function EmployeesPage() {
   return (
     <section>
       <h1>Karyawan</h1>
-      <p className="muted">{query.data?.meta?.total ?? rows.length} data</p>
+      <p className="muted">{query.data?.meta?.total ?? rows.length} karyawan</p>
       <div className="table-wrap">
         <table>
           <thead>
@@ -94,8 +94,9 @@ export function EmployeesPage() {
               <th>Kode</th>
               <th>Nama</th>
               <th>Departemen</th>
+              <th>Email</th>
+              <th>Peran</th>
               <th>Status</th>
-              <th>Login</th>
             </tr>
           </thead>
           <tbody>
@@ -104,51 +105,8 @@ export function EmployeesPage() {
                 <td>{row.employeeCode}</td>
                 <td>{row.name}</td>
                 <td>{row.department ?? "—"}</td>
-                <td>{row.isActive ? "Aktif" : "Nonaktif"}</td>
                 <td>{row.user?.email ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-export function LocationsPage() {
-  const query = useQuery({
-    queryKey: ["locations"],
-    queryFn: () => locationsApi.list(),
-  });
-
-  if (query.isLoading) return <p>Memuat lokasi...</p>;
-  if (query.isError) {
-    return <p className="error">{(query.error as Error).message}</p>;
-  }
-
-  const rows = query.data?.data ?? [];
-  return (
-    <section>
-      <h1>Lokasi / Geofence</h1>
-      <p className="muted">{query.data?.meta?.total ?? rows.length} lokasi</p>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nama</th>
-              <th>Lat</th>
-              <th>Lng</th>
-              <th>Radius (m)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.name}</td>
-                <td>{row.latitude}</td>
-                <td>{row.longitude}</td>
-                <td>{row.radiusMeters}</td>
+                <td>{row.user?.role ?? "—"}</td>
                 <td>{row.isActive ? "Aktif" : "Nonaktif"}</td>
               </tr>
             ))}

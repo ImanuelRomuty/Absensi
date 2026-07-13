@@ -42,12 +42,13 @@ class LoginViewModel(
             } catch (e: ApiException) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Gagal login. Cek koneksi / API.",
-                    )
+                val message = when {
+                    e.message?.contains("timeout", ignoreCase = true) == true ||
+                        e.message?.contains("Socket", ignoreCase = true) == true ->
+                        "Server masih bangun (Render cold start). Coba lagi dalam beberapa detik."
+                    else -> e.message ?: "Gagal login. Cek koneksi / API."
                 }
+                _uiState.update { it.copy(isLoading = false, error = message) }
             }
         }
     }

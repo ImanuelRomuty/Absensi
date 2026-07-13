@@ -6,12 +6,12 @@ import {
   AppLayout,
   DashboardPage,
   EmployeesPage,
-  LocationsPage,
 } from "./pages/AdminPages";
 import {
   ApprovalsPage,
   AttendancePage,
 } from "./pages/AttendanceApprovalsPages";
+import { LocationsPage } from "./pages/LocationsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {

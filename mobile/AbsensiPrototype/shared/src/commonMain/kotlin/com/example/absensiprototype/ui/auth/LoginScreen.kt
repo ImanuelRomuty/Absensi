@@ -70,6 +70,11 @@ fun LoginScreen(
         }
         if (state.isLoading) {
             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+            Text(
+                "Menunggu server… cold start bisa 30–60 detik",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         } else {
             Button(
                 onClick = viewModel::login,

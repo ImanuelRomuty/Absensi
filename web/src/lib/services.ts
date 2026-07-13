@@ -37,9 +37,30 @@ export const employeesApi = {
   },
 };
 
+export type CreateLocationBody = {
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters?: number;
+};
+
+export type UpdateLocationBody = {
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  radiusMeters?: number;
+  isActive?: boolean;
+};
+
 export const locationsApi = {
   list(page = 1, limit = 50) {
     return apiList<Location>(`/locations?page=${page}&limit=${limit}`);
+  },
+  create(body: CreateLocationBody) {
+    return apiRequest<Location>("/locations", { method: "POST", body });
+  },
+  update(id: string, body: UpdateLocationBody) {
+    return apiRequest<Location>(`/locations/${id}`, { method: "PATCH", body });
   },
 };
 

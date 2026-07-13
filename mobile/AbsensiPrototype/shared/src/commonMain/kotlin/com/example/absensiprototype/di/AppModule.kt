@@ -1,6 +1,7 @@
 package com.example.absensiprototype.di
 
 import com.example.absensiprototype.data.api.MasarifApi
+import com.example.absensiprototype.data.api.createHttpClient
 import com.example.absensiprototype.data.attendance.AttendanceRepository
 import com.example.absensiprototype.data.session.SettingsTokenStore
 import com.example.absensiprototype.data.session.TokenStore
@@ -16,6 +17,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<TokenStore> { SettingsTokenStore() }
+    single { createHttpClient() }
     singleOf(::MasarifApi)
     singleOf(::LocationProvider)
     singleOf(::AttendanceRepository)
