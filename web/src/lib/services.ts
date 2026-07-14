@@ -36,6 +36,21 @@ export const employeesApi = {
   list(page = 1, limit = 50) {
     return apiList<Employee>(`/employees?page=${page}&limit=${limit}`);
   },
+  update(
+    id: string,
+    body: {
+      name?: string;
+      department?: string | null;
+      managerId?: string | null;
+      isActive?: boolean;
+      locationIds?: string[];
+    },
+  ) {
+    return apiRequest<Employee>(`/employees/${id}`, {
+      method: "PATCH",
+      body,
+    });
+  },
 };
 
 export type CreateLocationBody = {

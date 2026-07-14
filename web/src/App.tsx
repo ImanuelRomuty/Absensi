@@ -5,7 +5,6 @@ import { LoginPage } from "./pages/LoginPage";
 import {
   AppLayout,
   DashboardPage,
-  EmployeesPage,
 } from "./pages/AdminPages";
 import {
   ApprovalsPage,
@@ -13,6 +12,7 @@ import {
 } from "./pages/AttendanceApprovalsPages";
 import { LocationsPage } from "./pages/LocationsPage";
 import { LeavePage } from "./pages/LeavePage";
+import { EmployeesPage } from "./pages/EmployeesPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {

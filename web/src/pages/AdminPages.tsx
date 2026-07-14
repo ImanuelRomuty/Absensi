@@ -1,8 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { canAccessAdmin, useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl } from "../lib/api";
-import { employeesApi } from "../lib/services";
 
 export function AppLayout() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -67,52 +65,6 @@ export function DashboardPage() {
           <h2>Departemen</h2>
           <p>{user?.employee?.department ?? "—"}</p>
         </article>
-      </div>
-    </section>
-  );
-}
-
-export function EmployeesPage() {
-  const query = useQuery({
-    queryKey: ["employees"],
-    queryFn: () => employeesApi.list(),
-  });
-
-  if (query.isLoading) return <p>Memuat karyawan...</p>;
-  if (query.isError) {
-    return <p className="error">{(query.error as Error).message}</p>;
-  }
-
-  const rows = query.data?.data ?? [];
-  return (
-    <section>
-      <h1>Karyawan</h1>
-      <p className="muted">{query.data?.meta?.total ?? rows.length} karyawan</p>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Kode</th>
-              <th>Nama</th>
-              <th>Departemen</th>
-              <th>Email</th>
-              <th>Peran</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.employeeCode}</td>
-                <td>{row.name}</td>
-                <td>{row.department ?? "—"}</td>
-                <td>{row.user?.email ?? "—"}</td>
-                <td>{row.user?.role ?? "—"}</td>
-                <td>{row.isActive ? "Aktif" : "Nonaktif"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </section>
   );
