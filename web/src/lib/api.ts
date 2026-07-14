@@ -82,6 +82,15 @@ function parseErrorFromBody(status: number, body: unknown): ApiClientError {
   return new ApiClientError(status, "UNKNOWN", `HTTP ${status}`, undefined, body);
 }
 
+function toNetworkError(err: unknown): ApiClientError {
+  const raw = err instanceof Error ? err.message : "Network error";
+  const friendly =
+    /failed to fetch|networkerror|load failed|network request failed/i.test(raw)
+      ? "Tidak bisa hubungi API (CORS / cold start / offline). Coba lagi sebentar."
+      : raw;
+  return new ApiClientError(0, "NETWORK_ERROR", friendly);
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
@@ -132,7 +141,7 @@ export async function apiRequest<T>(
   } catch (err) {
     if (err instanceof ApiClientError) throw err;
     const durationMs = Math.round(performance.now() - started);
-    const message = err instanceof Error ? err.message : "Network error";
+    const networkErr = toNetworkError(err);
     pushApiLog({
       method,
       url,
@@ -140,10 +149,10 @@ export async function apiRequest<T>(
       status: null,
       ok: false,
       responseBody: null,
-      errorMessage: message,
+      errorMessage: networkErr.message,
       durationMs,
     });
-    throw err;
+    throw networkErr;
   }
 }
 
@@ -186,7 +195,7 @@ export async function apiList<T>(
   } catch (err) {
     if (err instanceof ApiClientError) throw err;
     const durationMs = Math.round(performance.now() - started);
-    const message = err instanceof Error ? err.message : "Network error";
+    const networkErr = toNetworkError(err);
     pushApiLog({
       method,
       url,
@@ -194,9 +203,9 @@ export async function apiList<T>(
       status: null,
       ok: false,
       responseBody: null,
-      errorMessage: message,
+      errorMessage: networkErr.message,
       durationMs,
     });
-    throw err;
+    throw networkErr;
   }
 }

@@ -28,6 +28,8 @@ export async function buildApp(env: Env) {
   await app.register(cors, {
     origin: allowedOrigins.length === 0 ? true : allowedOrigins,
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Authorization", "Content-Type", "Accept"],
   });
   await app.register(authPlugin, { env });
   await app.register(rbacPlugin);
